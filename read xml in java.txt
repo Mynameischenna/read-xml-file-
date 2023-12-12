@@ -1,0 +1,16 @@
+
+what is xml:
+
+JSON (JavaScript Object Notation) and XML (eXtensible Markup Language) are both popular data interchange formats.
+xml - eXtansible Markup Language
+markup-in xml we use tags<> or marks
+extensible-and you can use your own tags i.e tags are not limited and not predefined, it can be extended.
+
+
+steps:
+1)get the document.builder
+2)get the document.
+3)normilize the document.
+4) get all elements by tag name
+
+
