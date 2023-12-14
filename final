@@ -1,0 +1,76 @@
+package xmlreader2;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.io.StringReader;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
+public class main1 {
+
+    public static void main(String[] args) {
+        // Replace these details with your database connection information
+        String url = "jdbc:mysql://localhost:3306/chenna";
+        String uname = "root";
+        String pass = "chenna";
+
+        try {
+            // Create a database connection
+            Connection connection = DriverManager.getConnection(url, uname, pass);
+
+            // XML data to be inserted into the database
+            String xmlData = "<data><name>Jkl</name><age>25</age></data>";
+
+            // Parse XML string to Document
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            InputSource inputSource = new InputSource(new StringReader(xmlData));
+            Document document = builder.parse(inputSource);
+
+            // Insert XML data into the database
+            insertXMLData(connection, document);
+
+            // Close the connection
+            connection.close();
+
+            System.out.println("Data inserted successfully!");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void insertXMLData(Connection connection, Document document) throws SQLException {
+        // SQL query to insert XML data into the database
+        String sql = "INSERT INTO example1(name, age) VALUES (?, ?)";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            // Retrieve values from XML
+            String name = getElementValue(document, "name");
+            int age = Integer.parseInt(getElementValue(document, "age"));
+
+            // Set parameters
+            preparedStatement.setString(1, name);
+            preparedStatement.setInt(2, age);
+
+            // Execute the query
+            preparedStatement.executeUpdate();
+        }
+    }
+
+    private static String getElementValue(Document document, String tagName) {
+        // Retrieve the text content of the specified XML element
+        NodeList nodeList = document.getElementsByTagName(tagName);
+        if (nodeList.getLength() > 0) {
+            Node node = nodeList.item(0);
+            return node.getTextContent();
+        }
+        return null;
+    }
+}
