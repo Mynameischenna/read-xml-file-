@@ -1,0 +1,26 @@
+<plan_info>
+		<ev_id>999394770</ev_id>
+		<plan_name>ImpOps Test Plan</plan_name>
+		<irsrl_code>401K</irsrl_code>
+		<prov_company>AMER</prov_company>
+		<prod_id/>
+		<status_code>ADDED TO PIPELINE</status_code>
+		<dpdate_time>2020-04-16T16:05:21.000-06:00</dpdate_time>
+		<rollover_ind>Y</rollover_ind>
+		<ga_id>1111125-60</ga_id>
+		<client_name>ImpOps Test Plans</client_name>
+		<first_line_mailing>8525 E Orchard Rd</first_line_mailing>
+		<scnd_line_mailing> </scnd_line_mailing>
+		<city>Greenwood Village</city>
+		<state_code>CO</state_code>
+		<zip_code>80111</zip_code>
+		<country>US</country>
+		<internal_compliance_ind>Y</internal_compliance_ind>
+		<plan_anniv_date>3112</plan_anniv_date>
+		<est_number_of_participants>500</est_number_of_participants>
+		<est_plan_assets>5000000</est_plan_assets>
+		<est_implementation_date>2017-09-26</est_implementation_date>
+		<subset_cash_code/>
+		<client_entity_type>C-CORPORATION</client_entity_type>
+		<tpa_firm_id>1-1334259842533</tpa_firm_id>
+	</plan_info>
