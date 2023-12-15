@@ -1,10 +1,10 @@
 package xmlreader2;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.io.StringReader;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
@@ -24,17 +24,17 @@ public class main1 {
             // Create a database connection
             Connection connection = DriverManager.getConnection(url, uname, pass);
 
-            // XML data to be inserted into the database
-            String xmlData = "<data><name>Jkl</name><age>25</age></data>";
+            // Specify the path to the XML file
+            String xmlFilePath ="C:\\Users\\chenn\\OneDrive\\Desktop\\plan_info.xml";
 
-            // Parse XML string to Document
+            // Parse XML file to Document
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
-            InputSource inputSource = new InputSource(new StringReader(xmlData));
+            InputSource inputSource = new InputSource(new File(xmlFilePath).toURI().toString());
             Document document = builder.parse(inputSource);
 
-            // Insert XML data into the database
-            insertXMLData(connection, document);
+            // Insert XML data into the database for each <plan_info> element
+            insertAllXMLData(connection, document);
 
             // Close the connection
             connection.close();
@@ -46,30 +46,63 @@ public class main1 {
         }
     }
 
-    private static void insertXMLData(Connection connection, Document document) throws SQLException {
+    private static void insertAllXMLData(Connection connection, Document document) throws SQLException {
         // SQL query to insert XML data into the database
-        String sql = "INSERT INTO example1(name, age) VALUES (?, ?)";
+        String sql = "INSERT INTO plan_info (ev_id, plan_name, irsrl_code, prov_company, "
+                + "prod_id, status_code, dpdate_time, rollover_ind, ga_id, client_name, "
+                + "first_line_mailing, scnd_line_mailing, city, state_code, zip_code, "
+                + "country, internal_compliance_ind, plan_anniv_date, est_number_of_participants, "
+                + "est_plan_assets, est_implementation_date, subset_cash_code, client_entity_type, "
+                + "tpa_firm_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
 
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            // Retrieve values from XML
-            String name = getElementValue(document, "name");
-            int age = Integer.parseInt(getElementValue(document, "age"));
+        // Retrieve all <plan_info> nodes
+        NodeList planInfoNodes = document.getElementsByTagName("plan_info");
 
-            // Set parameters
-            preparedStatement.setString(1, name);
-            preparedStatement.setInt(2, age);
+        // Iterate over each <plan_info> node and insert data into the database
+        for (int i = 0; i < planInfoNodes.getLength(); i++) {
+            Node planInfoNode = planInfoNodes.item(i);
 
-            // Execute the query
-            preparedStatement.executeUpdate();
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                // Retrieve values from the current <plan_info> node
+                preparedStatement.setString(1, getElementValue(planInfoNode, "ev_id"));
+                preparedStatement.setString(2, getElementValue(planInfoNode, "plan_name"));
+                preparedStatement.setString(3, getElementValue(planInfoNode, "irsrl_code"));
+                preparedStatement.setString(4, getElementValue(planInfoNode, "prov_company"));
+                preparedStatement.setString(5, getElementValue(planInfoNode, "prod_id"));
+                preparedStatement.setString(6, getElementValue(planInfoNode, "status_code"));
+                preparedStatement.setString(7, getElementValue(planInfoNode, "dpdate_time"));
+                preparedStatement.setString(8, getElementValue(planInfoNode, "rollover_ind"));
+                preparedStatement.setString(9, getElementValue(planInfoNode, "ga_id"));
+                preparedStatement.setString(10, getElementValue(planInfoNode, "client_name"));
+                preparedStatement.setString(11, getElementValue(planInfoNode, "first_line_mailing"));
+                preparedStatement.setString(12, getElementValue(planInfoNode, "scnd_line_mailing"));
+                preparedStatement.setString(13, getElementValue(planInfoNode, "city"));
+                preparedStatement.setString(14, getElementValue(planInfoNode, "state_code"));
+                preparedStatement.setString(15, getElementValue(planInfoNode, "zip_code"));
+                preparedStatement.setString(16, getElementValue(planInfoNode, "country"));
+                preparedStatement.setString(17, getElementValue(planInfoNode, "internal_compliance_ind"));
+                preparedStatement.setString(18, getElementValue(planInfoNode, "plan_anniv_date"));
+                preparedStatement.setString(19, getElementValue(planInfoNode, "est_number_of_participants"));
+                preparedStatement.setString(20, getElementValue(planInfoNode, "est_plan_assets"));
+                preparedStatement.setString(21, getElementValue(planInfoNode, "est_implementation_date"));
+                preparedStatement.setString(22, getElementValue(planInfoNode, "subset_cash_code"));
+                preparedStatement.setString(23, getElementValue(planInfoNode, "client_entity_type"));
+                preparedStatement.setString(24, getElementValue(planInfoNode, "tpa_firm_id"));
+
+                // Execute the query for the current <plan_info> node
+                preparedStatement.executeUpdate();
+            }
         }
     }
 
-    private static String getElementValue(Document document, String tagName) {
-        // Retrieve the text content of the specified XML element
-        NodeList nodeList = document.getElementsByTagName(tagName);
-        if (nodeList.getLength() > 0) {
-            Node node = nodeList.item(0);
-            return node.getTextContent();
+    private static String getElementValue(Node parentNode, String tagName) {
+        // Retrieve the text content of the specified child element under the parent node
+        NodeList nodeList = parentNode.getChildNodes();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node node = nodeList.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals(tagName)) {
+                return node.getTextContent();
+            }
         }
         return null;
     }
