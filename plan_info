@@ -107,3 +107,352 @@ public class main1 {
         return null;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+package xmlreader2;
+import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
+public class Contact_info {
+
+    public static void main(String[] args) {
+        // Replace these details with your database connection information
+        String url = "jdbc:mysql://localhost:3306/chenna";
+        String uname = "root";
+        String pass = "chenna";
+
+        try {
+            // Create a database connection
+            Connection connection = DriverManager.getConnection(url, uname, pass);
+
+            // Specify the path to the XML file
+            String xmlFilePath = "C:\\Users\\chenn\\OneDrive\\Desktop\\NewFile - Copy.xml";
+
+            // Parse XML file to Document
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            InputSource inputSource = new InputSource(new File(xmlFilePath).toURI().toString());
+            Document document = builder.parse(inputSource);
+
+            // Get the root element
+            Element rootElement = document.getDocumentElement();
+
+            // Insert XML data into the database
+            insertContactInfo(connection, rootElement);
+
+            // Close the connection
+            connection.close();
+
+            System.out.println("Data inserted successfully!");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void insertContactInfo(Connection connection, Element rootElement) throws SQLException {
+        // SQL query to insert XML data into the contact_info1 table
+        String contactInfoSql = "INSERT INTO contact_info1 (contact_id, first_name, last_name, job_title, "
+                + "company_name, first_line_mailing, scnd_line_mailing, city, state_code, "
+                + "zip_code, country, phone_nbr, fax_nbr, email_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        // SQL query to insert contact_roles and link them to contact_info1
+        String contactRoleSql = "INSERT INTO contact_roles (contact_id, role_name) VALUES (?, ?)";
+
+        // Retrieve contact_info elements
+        NodeList contactInfoNodes = rootElement.getElementsByTagName("contact_info");
+
+        // Iterate over each <contact_info> node and insert data into the database
+        for (int i = 0; i < contactInfoNodes.getLength(); i++) {
+            Node contactInfoNode = contactInfoNodes.item(i);
+
+            // Retrieve values from the current <contact_info> node
+            String contactId = getElementValue(contactInfoNode, "contact_id");
+
+            try (PreparedStatement contactInfoStatement = connection.prepareStatement(contactInfoSql, Statement.RETURN_GENERATED_KEYS)) {
+                contactInfoStatement.setString(1, contactId);
+                contactInfoStatement.setString(2, getElementValue(contactInfoNode, "first_name"));
+                contactInfoStatement.setString(3, getElementValue(contactInfoNode, "last_name"));
+                contactInfoStatement.setString(4, getElementValue(contactInfoNode, "job_title"));
+                contactInfoStatement.setString(5, getElementValue(contactInfoNode, "company_name"));
+                contactInfoStatement.setString(6, getElementValue(contactInfoNode, "first_line_mailing"));
+                contactInfoStatement.setString(7, getElementValue(contactInfoNode, "scnd_line_mailing"));
+                contactInfoStatement.setString(8, getElementValue(contactInfoNode, "city"));
+                contactInfoStatement.setString(9, getElementValue(contactInfoNode, "state_code"));
+                contactInfoStatement.setString(10, getElementValue(contactInfoNode, "zip_code"));
+                contactInfoStatement.setString(11, getElementValue(contactInfoNode, "country"));
+                contactInfoStatement.setString(12, getElementValue(contactInfoNode, "phone_nbr"));
+                contactInfoStatement.setString(13, getElementValue(contactInfoNode, "fax_nbr"));
+                contactInfoStatement.setString(14, getElementValue(contactInfoNode, "email_address"));
+
+                // Execute the query for the current <contact_info> node
+                contactInfoStatement.executeUpdate();
+
+                // Get the auto-generated contact_id
+                ResultSet generatedKeys = contactInfoStatement.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    int contactIdInt = generatedKeys.getInt(1);
+
+                    // Handle multiple <contact_role> elements
+                    NodeList contactRoleNodes = contactInfoNode.getChildNodes();
+                    for (int j = 0; j < contactRoleNodes.getLength(); j++) {
+                        Node contactRoleNode = contactRoleNodes.item(j);
+                        if (contactRoleNode.getNodeType() == Node.ELEMENT_NODE && contactRoleNode.getNodeName().equals("contact_role")) {
+                            try (PreparedStatement contactRoleStatement = connection.prepareStatement(contactRoleSql)) {
+                                contactRoleStatement.setInt(1, contactIdInt);
+                                contactRoleStatement.setString(2, contactRoleNode.getTextContent());
+                                System.out.println("hello");
+                                // Execute the query for the current <contact_role> node
+                                contactRoleStatement.executeUpdate();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static String getElementValue(Node parentNode, String tagName) {
+        // Retrieve the text content of the specified child element under the parent node
+        NodeList nodeList = parentNode.getChildNodes();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node node = nodeList.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals(tagName)) {
+                return node.getTextContent();
+            }
+        }
+        return null;
+    }
+}
+
+
+package xmlreader2;
+
+import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
+public class Questionary {
+
+    public static void main(String[] args) {
+        // Replace these details with your database connection information
+        String url = "jdbc:mysql://localhost:3306/chenna";
+        String uname = "root";
+        String pass = "chenna";
+
+        try {
+            // Create a database connection
+            Connection connection = DriverManager.getConnection(url, uname, pass);
+
+            // Specify the path to the XML file
+            String xmlFilePath = "C:\\Users\\chenn\\OneDrive\\Desktop\\NewFile - Copy.xml";
+
+            // Parse XML file to Document
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            InputSource inputSource = new InputSource(new File(xmlFilePath).toURI().toString());
+            Document document = builder.parse(inputSource);
+
+            // Insert XML data into the database for each <question_answer> element
+            insertAllXMLData(connection, document);
+
+            // Close the connection
+            connection.close();
+
+            System.out.println("Data inserted successfully!");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+ // ...
+
+    private static void insertAllXMLData(Connection connection, Document document) throws SQLException {
+        // SQL query to insert XML data into the database
+        String sql = "INSERT INTO question_answer1 (questionnaire_id, page_seqnbr, seqnbr, sort_seq_no, instructions, "
+                + "attribute, html_input_type, data_type, max_length, mandatory_code, "
+                + "mandatory_questionnaire_id, mandatory_page_seqnbr, mandatory_question_seqnbr, "
+                + "mandatory_question_true_value, mandatory_question_false_value, question, answer, smart_xml_tag) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        // Retrieve all <question_answer> nodes
+        NodeList questionAnswerNodes = document.getElementsByTagName("question_answer");
+
+        // Iterate over each <question_answer> node and insert data into the database
+        for (int i = 0; i < questionAnswerNodes.getLength(); i++) {
+            Node questionAnswerNode = questionAnswerNodes.item(i);
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                // Retrieve values from the current <question_answer> node
+                preparedStatement.setString(1, getElementValue(questionAnswerNode, "questionnaire_id"));
+                preparedStatement.setString(2, getElementValue(questionAnswerNode, "page_seqnbr"));
+                preparedStatement.setString(3, getElementValue(questionAnswerNode, "seqnbr"));
+                preparedStatement.setString(4, getElementValue(questionAnswerNode, "sort_seq_no"));
+                preparedStatement.setString(5, getElementValue(questionAnswerNode, "instructions"));
+                preparedStatement.setString(6, getElementValue(questionAnswerNode, "attribute"));
+                preparedStatement.setString(7, getElementValue(questionAnswerNode, "html_input_type"));
+                preparedStatement.setString(8, getElementValue(questionAnswerNode, "data_type"));
+                preparedStatement.setString(9, getElementValue(questionAnswerNode, "max_length"));
+                preparedStatement.setString(10, getElementValue(questionAnswerNode, "mandatory_code")); // Ensure this does not exceed the defined length
+                preparedStatement.setString(11, getElementValue(questionAnswerNode, "mandatory_questionnaire_id"));
+                preparedStatement.setString(12, getElementValue(questionAnswerNode, "mandatory_page_seqnbr"));
+                preparedStatement.setString(13, getElementValue(questionAnswerNode, "mandatory_question_seqnbr"));
+                preparedStatement.setString(14, getElementValue(questionAnswerNode, "mandatory_question_true_value"));
+                preparedStatement.setString(15, getElementValue(questionAnswerNode, "mandatory_question_false_value"));
+                preparedStatement.setString(16, getElementValue(questionAnswerNode, "question"));
+                preparedStatement.setString(17, getElementValue(questionAnswerNode, "answer"));
+                preparedStatement.setString(18, getElementValue(questionAnswerNode, "smart_xml_tag"));
+
+                // Execute the query for the current <question_answer> node
+                preparedStatement.executeUpdate();
+            }
+        }
+    }
+
+    private static String getElementValue(Node parentNode, String tagName) {
+        // Retrieve the text content of the specified child element under the parent node
+        NodeList nodeList = parentNode.getChildNodes();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node node = nodeList.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals(tagName)) {
+                String value = node.getTextContent();
+                return (value != null && !value.isEmpty()) ? value : null; // Return null for empty strings
+            }
+        }
+        return null; // Return null if the element is not present
+    }
+
+    }
+
+
+
+
+package xmlreader2;
+
+
+import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
+public class user_info {
+
+    public static void main(String[] args) {
+        // Replace these details with your database connection information
+        String url = "jdbc:mysql://localhost:3306/chenna";
+        String uname = "root";
+        String pass = "chenna";
+
+        try {
+            // Create a database connection
+            Connection connection = DriverManager.getConnection(url, uname, pass);
+
+            // Specify the path to the XML file
+            String xmlFilePath = "C:\\Users\\chenn\\OneDrive\\Desktop\\NewFile - Copy.xml";
+
+            // Parse XML file to Document
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            InputSource inputSource = new InputSource(new File(xmlFilePath).toURI().toString());
+            Document document = builder.parse(inputSource);
+
+            // Insert XML data into the database for each <user_info> element
+            insertAllXMLData(connection, document);
+
+            // Close the connection
+            connection.close();
+
+            System.out.println("Data inserted successfully!");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void insertAllXMLData(Connection connection, Document document) throws SQLException {
+        // SQL query to insert XML data into the database
+        String sql = "INSERT INTO user_info (logon_id, last_name, phone_nbr, job_title, middle_name, "
+                + "area_code, first_name, email_address) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        // Retrieve all <user_info> nodes
+        NodeList userInfoNodes = document.getElementsByTagName("user_info");
+
+        // Iterate over each <user_info> node and insert data into the database
+        for (int i = 0; i < userInfoNodes.getLength(); i++) {
+            Node userInfoNode = userInfoNodes.item(i);
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                // Retrieve values from the current <user_info> node
+                preparedStatement.setString(1, getElementValue(userInfoNode, "logon_id"));
+                preparedStatement.setString(2, getElementValue(userInfoNode, "last_name"));
+                preparedStatement.setString(3, getElementValue(userInfoNode, "phone_nbr"));
+                preparedStatement.setString(4, getElementValue(userInfoNode, "job_title"));
+                preparedStatement.setString(5, getElementValue(userInfoNode, "middle_name"));
+                preparedStatement.setString(6, getElementValue(userInfoNode, "area_code"));
+                preparedStatement.setString(7, getElementValue(userInfoNode, "first_name"));
+                preparedStatement.setString(8, getElementValue(userInfoNode, "email_address"));
+
+                // Execute the query for the current <user_info> node
+                preparedStatement.executeUpdate();
+            }
+        }
+    }
+
+    private static String getElementValue(Node parentNode, String tagName) {
+        // Retrieve the text content of the specified child element under the parent node
+        NodeList nodeList = parentNode.getChildNodes();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node node = nodeList.item(i);
+            if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals(tagName)) {
+                String value = node.getTextContent();
+                return (value != null && !value.isEmpty()) ? value : null; // Return null for empty strings
+            }
+        }
+        return null; // Return null if the element is not present
+    }
+}
+
+
+
+
